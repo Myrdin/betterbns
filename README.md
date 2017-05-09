@@ -92,7 +92,7 @@ You may report an issue, but I give no garuntee of providing support, as I made 
 
 You can compile the solution with the newest version of Visual Studio.
 
-[1]: https://ci.appveyor.com/project/betterbns/build/artifacts
+[1]: https://ci.appveyor.com/project/zeffy/betterbns/build/artifacts
 [2]: https://www.bns.academy/english/damage-meter/
 [3]: https://en.wikipedia.org/wiki/Portable_Executable#Import_Table
 [BNSBoost]: https://github.com/Xyene/BNSBoost
