@@ -1,0 +1,22 @@
+version: x.x.{build}
+skip_commits:
+  files:
+    - README.md
+image: Visual Studio 2017
+configuration: Release
+platform: x86
+build:
+  verbosity: minimal
+after_build:
+- cmd: >-
+    set "ZIP_NAME=%APPVEYOR_PROJECT_NAME%_%APPVEYOR_REPO_COMMIT:~0,8%.zip"
+
+    7z a "%ZIP_NAME%" "%APPVEYOR_BUILD_FOLDER%\version\bin\%CONFIGURATION%\%PLATFORM%\version.dll"
+
+    unix2dos "default_init.ini"
+
+    7z a "%ZIP_NAME%" "%APPVEYOR_BUILD_FOLDER%\default_init.ini"
+
+    7z rn "%ZIP_NAME%" "default_init.ini" "init.ini"
+artifacts:
+- path: '*.zip'
