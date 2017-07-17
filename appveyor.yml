@@ -21,10 +21,6 @@ after_build:
 
     copy /Y "%APPVEYOR_BUILD_FOLDER%\betterbns.ini" "%APPVEYOR_BUILD_FOLDER%\bin\NCWest\NCLauncher\"
 
-    7z a "%BUILD_ZIPFILE%" "%APPVEYOR_BUILD_FOLDER%\betterbns.ini"
-
-    7z rn "%BUILD_ZIPFILE%" "default_betterbns.ini" "betterbns.ini"
-
     cd "%APPVEYOR_BUILD_FOLDER%\bin"
 
     7z a "%BUILD_ZIPFILE%" *
