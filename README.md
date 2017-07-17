@@ -6,8 +6,6 @@
 
 This project is based off of [my steam_api.dll fork](https://github.com/zeffy/bnsboost-steam_api.dll) of [BNSBoost]. The entire codebase has been revamped, and it has almost no common code with BNSBoost at this point. However, without BNSBoost it is likely I would have never made betterbns, so many thanks to [@Xyene](https://github.com/Xyene).
 
-While this project is called `betterbns`, nothing in the code relies on it being used with Blade & Soul, and could technically be used with other game launchers, as long as they import `version.dll`, use `CreateFileW`, `CreateProcessW`, and are vulnerable to IAT manipulation.
-
 Not endorsed by NCSoft in any way, shape, or form; Blade & Soul, etc. are all trademarks of NCSoft. 
 
 **Using this is almost certainly against the code of conduct, terms of use, and EULA for any online game.**
@@ -22,10 +20,8 @@ There is no editor included for modifying your Blade & Soul game files, use [BNS
 
 ## Installation
 
-These instructions are specifically for Blade & Soul, but the general idea should be the same for other games, too.
-
 - [Grab the latest build from AppVeyor][1]
-- Unzip my `version.dll` and `init.ini` into your NCLauncher directory
+- Unzip.
 - That's all!
 
 Your anti-virus might complain about `version.dll`, as it hooks some system functions (see below). If this happens you'll need to whitelist it before proceeding. If you're jumpy about security (understably so; using binaries from some guy on the internet is not smart), you can always recompile it yourself from source.
@@ -38,13 +34,13 @@ Before you modify any file, navigate to its directory first, and create a subdir
 
 This tricks the launcher's file integrity checking into thinking that your game files are unmodified, and allow the game to start without attempting to repair them.
 
-### How to set up `init.ini` for custom command line arguments
+### How to set up `betterbns.ini` for custom command line arguments
 
-The release zip contains a pre-made `init.ini` for Blade & Soul, but can be made to work with other games as well. `init.ini` just has to be in the working directory of whatever process loads `version.dll`.
+The release zip contains a pre-made `betterbns.ini` for Blade & Soul, but can be made to work with other games as well. `betterbns.ini` just has to be in the working directory of whatever process loads `version.dll`.
 
-The `init.ini` file is processed top-down, and first checks for the full path of the executable being started, and then just the process name. So in the example below, the second entry would take precedence over the first one because it uses a full path name.
+The `betterbns.ini` file is processed top-down, and first checks for the full path of the executable being started, and then just the process name. So in the example below, the second entry would take precedence over the first one because it uses a full path name.
 
-Example `init.ini` for Blade & Soul:
+Example:
 
 ```ini
 ; this applies to both 32- and 64-bit
@@ -57,8 +53,6 @@ ExitParentProcess=1 ; change this to 0 if you want NC Launcher to stay open afte
 ExtraArgs=-NOTEXTURESTREAMING -USEALLAVAILABLECORES -UNATTENDED
 ExitParentProcess=1
 ```
-
-### Blade & Soul specific
 
 #### Enabling the DPS meter
 
@@ -81,8 +75,6 @@ The code itself is pretty short and easy to follow, but in general:
   * Relevant calls to `CreateFileW` are redirected to the `_original` directory
   * `CreateProcessW` hook lets you add custom command line args to a started process (see above)
   * `LoadLibraryW` hook applies these hooks to any libraries loaded after `version.dll`
-
-The code never touches the main game client, only its launcher.
 
 ## Reporting an issue
 
