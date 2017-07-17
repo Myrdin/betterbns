@@ -17,11 +17,11 @@ before_build:
 
 after_build:
 - cmd: >-
-    unix2dos "%APPVEYOR_BUILD_FOLDER%\bin\NCWest\NCLauncher\betterbns.ini"
+    unix2dos "%APPVEYOR_BUILD_FOLDER%\betterbns.ini"
 
-    copy /Y "default_betterbns.ini" "%APPVEYOR_BUILD_FOLDER%\default_betterbns.ini"
+    copy /Y "%APPVEYOR_BUILD_FOLDER%\betterbns.ini" "%APPVEYOR_BUILD_FOLDER%\bin\NCWest\NCLauncher\"
 
-    7z a "%BUILD_ZIPFILE%" "%APPVEYOR_BUILD_FOLDER%\default_betterbns.ini"
+    7z a "%BUILD_ZIPFILE%" "%APPVEYOR_BUILD_FOLDER%\betterbns.ini"
 
     7z rn "%BUILD_ZIPFILE%" "default_betterbns.ini" "betterbns.ini"
 
