@@ -1,9 +1,6 @@
 #pragma once
 
-#pragma comment(lib, "Shlwapi.lib")
-
-
-DWORD WINAPI install_hooks_t(LPVOID lpParam);
+DWORD WINAPI NewThreadProc(LPVOID lpParam);
 
 VOID install_hooks(HMODULE hm);
 

@@ -7,16 +7,27 @@ configuration: Release
 platform: x86
 build:
   verbosity: minimal
+before_build:
+- cmd: >-
+    set "BUILD_VERSION=%APPVEYOR_BUILD_VERSION%-%APPVEYOR_REPO_COMMIT:~0,8%"
+
+    set "BUILD_VERSION_COMMA_SEP=%APPVEYOR_BUILD_VERSION:.=,%"
+
+    set "BUILD_ZIPFILE=%APPVEYOR_BUILD_FOLDER%\%APPVEYOR_PROJECT_NAME%_v%BUILD_VERSION%_%PLATFORM%.zip"
+
 after_build:
 - cmd: >-
-    set "ZIP_NAME=%APPVEYOR_PROJECT_NAME%_%APPVEYOR_REPO_COMMIT:~0,8%.zip"
+    unix2dos "%APPVEYOR_BUILD_FOLDER%\bin\NCWest\NCLauncher\betterbns.ini"
 
-    7z a "%ZIP_NAME%" "%APPVEYOR_BUILD_FOLDER%\version\bin\%CONFIGURATION%\%PLATFORM%\version.dll"
+    copy /Y "default_betterbns.ini" "%APPVEYOR_BUILD_FOLDER%\default_betterbns.ini"
 
-    unix2dos "default_init.ini"
+    7z a "%BUILD_ZIPFILE%" "%APPVEYOR_BUILD_FOLDER%\default_betterbns.ini"
 
-    7z a "%ZIP_NAME%" "%APPVEYOR_BUILD_FOLDER%\default_init.ini"
+    7z rn "%BUILD_ZIPFILE%" "default_betterbns.ini" "betterbns.ini"
 
-    7z rn "%ZIP_NAME%" "default_init.ini" "init.ini"
+    cd "%APPVEYOR_BUILD_FOLDER%\bin"
+
+    7z a "%BUILD_ZIPFILE%" *
+
 artifacts:
 - path: '*.zip'

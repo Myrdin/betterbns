@@ -27,15 +27,15 @@ BOOL LoadLibraryAndGetProcAddress(LPCSTR lpProcName, FARPROC *lpFarProc) {
         return TRUE;
     }
     if (!hm) {
-        TCHAR path[MAX_PATH + 1];
+        TCHAR path[MAX_PATH];
         GetSystemDirectory(path, _countof(path));
         _tcscat_s(path, _countof(path), _T("\\version.dll"));
         hm = LoadLibrary(path);
-        XTRACE(L"Loaded original \"version.dll\" [%p]", hm);
+        dwprintf(L"Loaded original \"version.dll\" [%p]", hm);
     }
     if (hm) {
         *lpFarProc = GetProcAddress(hm, lpProcName);
-        XTRACE(L"Resolved function \"%S\" [%p]", lpProcName, *lpFarProc);
+        dwprintf(L"Resolved function \"%S\" [%p]", lpProcName, *lpFarProc);
         return TRUE;
     }
     return FALSE;
@@ -50,5 +50,7 @@ BOOL Cleanup(void) {
     if (result) {
         hm = NULL;
     }
+    dwprintf(L"Bye bye!");
+    log_close();
     return result;
 }

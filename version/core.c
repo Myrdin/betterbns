@@ -6,54 +6,33 @@
 #include "util.h"
 
 
-DWORD WINAPI install_hooks_t(LPVOID lpParam) {
+DWORD WINAPI NewThreadProc(LPVOID lpParam) {
     DWORD dwProcessId = GetCurrentProcessId();
     DWORD dwThreadId = GetCurrentThreadId();
+    HANDLE lphThreads[0x1000];
+    SIZE_T cb;
 
-    HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+    SuspendProcessThreads(dwProcessId, dwThreadId, lphThreads, _countof(lphThreads), &cb);
 
-    THREADENTRY32 te;
-    te.dwSize = sizeof(te);
+    HMODULE hm = GetModuleHandle(NULL);
+    install_hooks(hm);
 
-    HANDLE hThreads[2048];
-    int count = 0;
-
-    Thread32First(hSnap, &te);
-    do {
-        if (te.th32OwnerProcessID != dwProcessId || te.th32ThreadID == dwThreadId) {
-            continue;
-        }
-        hThreads[count] = OpenThread(THREAD_ALL_ACCESS, FALSE, te.th32ThreadID);
-        SuspendThread(hThreads[count]);
-        XTRACE(L"Suspended thread %d [%p]", te.th32ThreadID, hThreads[count]);
-        count++;
-    } while (Thread32Next(hSnap, &te));
-    CloseHandle(hSnap);
-
-    install_hooks(NULL);
-
-    for (int i = 0; i < count; i++) {
-        ResumeThread(hThreads[i]);
-        XTRACE(L"Resumed thread [%p]", hThreads[i]);
-        CloseHandle(hThreads[i]);
-    }
+    ResumeAndCloseThreads(lphThreads, cb);
     return 0;
 }
 
 VOID install_hooks(HMODULE hm) {
-    if (hm == NULL) {
-        hm = GetModuleHandle(NULL);
-    }
-    DETOUR_IAT(LoadLibraryW, hm);
-    DETOUR_IAT(CreateFileW, hm);
-    DETOUR_IAT(CreateProcessW, hm);
-};
+    DETOUR_IAT(hm, LoadLibraryW);
+    DETOUR_IAT(hm, CreateFileW);
+    DETOUR_IAT(hm, CreateProcessW);
+    return;
+}
 
 HMODULE WINAPI _LoadLibraryW(
     _In_ LPCWSTR lpFileName
 ) {
     HMODULE hm = LoadLibraryW(lpFileName);
-    XTRACE(L"Loaded \"%s\" [%p]", lpFileName, hm);
+    dwprintf(L"Loaded \"%s\" [%p]", lpFileName, hm);
 
     install_hooks(hm);
     return hm;
@@ -73,11 +52,11 @@ HANDLE WINAPI _CreateFileW(
 
     wcscat_s(dir, _countof(dir), L"_original\\");
 
-    WCHAR buffer[MAX_PATH + 1];
+    WCHAR buffer[MAX_PATH];
     _wmakepath_s(buffer, _countof(buffer), drive, dir, filename, ext);
 
     if (PathFileExistsW(buffer) || (!wcscat_s(buffer, _countof(buffer), L".ignore") && PathFileExistsW(buffer))) {
-        XTRACE(L"Redirecting \"%s\" => \"%s\"", lpFileName, buffer);
+        dwprintf(L"Redirecting \"%s\" => \"%s\"", lpFileName, buffer);
         lpFileName = buffer;
     }
 
@@ -98,14 +77,14 @@ BOOL WINAPI _CreateProcessW(
     _In_        LPSTARTUPINFO         lpStartupInfo,
     _Out_       LPPROCESS_INFORMATION lpProcessInformation
 ) {
-    WCHAR init_path[MAX_PATH + 1];
+    WCHAR init_path[MAX_PATH];
     GetCurrentDirectoryW(_countof(init_path), init_path);
-    wcscat_s(init_path, _countof(init_path), L"\\init.ini");
+    wcscat_s(init_path, _countof(init_path), L"\\betterbns.ini");
 
     BOOL bExitParentProcess = FALSE;
     LPWSTR buffer;
-    WCHAR lpAppName[MAX_PATH + 1];
-    if (PathFileExistsW(init_path) && init_find_appname(lpApplicationName, lpCommandLine, init_path, lpAppName, _countof(lpAppName))) {
+    WCHAR lpAppName[MAX_PATH];
+    if (PathFileExistsW(init_path) && config_find_appname(lpApplicationName, lpCommandLine, init_path, lpAppName, _countof(lpAppName))) {
         bExitParentProcess = (BOOL)GetPrivateProfileIntW(lpAppName, L"ExitParentProcess", 0, init_path);
         SIZE_T size = 32768;
         SIZE_T maxlen = 32768;
@@ -132,7 +111,7 @@ BOOL WINAPI _CreateProcessW(
         }
         free(lpExtraArgs);
     }
-    XTRACE(L"Starting \"%s\" %s", lpApplicationName, lpCommandLine);
+    dwprintf(L"Starting \"%s\" %s", lpApplicationName, lpCommandLine);
     BOOL result = CreateProcessW(
         lpApplicationName, lpCommandLine, lpProcessAttributes,
         lpThreadAttributes, bInheritHandles, dwCreationFlags, lpEnvironment,
@@ -140,7 +119,7 @@ BOOL WINAPI _CreateProcessW(
     );
     free(buffer);
     if (result && bExitParentProcess) {
-        XTRACE(L"Exiting parent process");
+        dwprintf(L"Exiting parent process");
         exit(0);
     }
     return result;
